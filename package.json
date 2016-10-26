@@ -1,0 +1,11 @@
+{
+  "name": "one-two",
+  "version": "0.0.1",
+  "description": "A simple web micro framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Raffy Li",
+  "license": "ISC"
+}
