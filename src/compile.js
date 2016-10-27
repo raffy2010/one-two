@@ -2,6 +2,11 @@ import {getInstance, hasComponent, getComponent} from './componentFactory';
 
 let slice = Array.prototype.slice;
 
+const EventMap = {
+  'x-click': 'click',
+  'x-touch': 'touchstart'
+};
+
 export function parse(node) {
   if (Array.isArray(node)) {
     node.forEach((singleNode) => {
@@ -26,25 +31,41 @@ export function destroy(node) {
     return;
   }
 
-  if (node.hasAttribute('x-component') && node.hasAttribute('x-component-id')) {
-    let component = findComponent(node);
+  if (!tryDestroyComponent(node)) {
+    let queue = [node];
 
-    component.destroy();
+    while (node = queue.shift()) {
+      let childs = childElements(node.childNodes),
+          child;
+
+      while (child = childs.shift()) {
+        if (!tryDestroyComponent(child)) {
+          queue.push(child);
+        }
+      }
+    }
   }
 }
 
-function traverseNode(node, component, fn) {
+function traverseNode(node, parentComponent, fn) {
   if (!node || node.nodeType !== 1) {
     return;
   }
 
+  let component,
+      context;
+
   if (node.hasAttribute('x-component')) {
-    component = fn.call(null, node, component);
+    component = fn.call(null, node, parentComponent);
   }
 
-  let childNodes = slice.call(node.childNodes).filter((node) => {
-    return node.nodeType === 1;
-  });
+  context = component || parentComponent;
+
+  if (context) {
+    compileEvent(node, context);
+  }
+
+  let childNodes = childElements(node);
 
   if (childNodes.length) {
     let childNode;
@@ -52,17 +73,15 @@ function traverseNode(node, component, fn) {
     while (childNode = childNodes.shift()) {
       traverseNode(childNode, component, fn);
     }
+
+    if (component) {
+      component.initQueue.forEach((fn) => {
+        fn();
+      });
+
+      component.initQueue.length = 0;
+    }
   }
-}
-
-function compile(node, component) {
-  let componentName = node.getAttribute('x-component');
-
-  return compileComponent(componentName, node, component);
-}
-
-function compileComponent(component, node, parentComponent) {
-  return getInstance(component, node, parentComponent);
 }
 
 function bottomUp(node, fn) {
@@ -83,6 +102,63 @@ function bottomUp(node, fn) {
   }
 }
 
+function childElements(node) {
+  return slice.call(node.childNodes)
+    .filter(node => node.nodeType === 1);
+}
+
+function compile(node, component) {
+  let componentName = node.getAttribute('x-component');
+
+  return compileComponent(componentName, node, component);
+}
+
+function compileComponent(component, node, parentComponent) {
+  return getInstance(component, node, parentComponent);
+}
+
+function compileEvent(node, component) {
+  slice.call(node.attributes).forEach((attr) => {
+    let name = attr.name,
+        value = attr.value,
+        eventHandler,
+        eventName,
+        fn,
+        unbind;
+
+    if (eventName = EventMap[name]) {
+      fn = computeExpression(value, component);
+
+      if (typeof eventName === 'string') {
+        node.addEventListener(eventName, fn);
+
+        unbind = () => node.removeEventListener(eventName, fn);
+      } else if (typeof eventName === 'function') {
+        eventHandler = eventName;
+        unbind = eventHandler(node, fn);
+
+        if (typeof unbind !== 'function') {
+          unbind = noop;
+        }
+      }
+
+      component.onDestroy(unbind);
+    }
+  });
+}
+
+function tryDestroyComponent(node) {
+  if (node.hasAttribute('x-component') && node.hasAttribute('x-component-id')) {
+    let component = findComponent(node);
+
+    if (component) {
+      component.destroy();
+    }
+
+    return true;
+  }
+}
+
 function detectComponentNode(node) {
   return node.hasAttribute('x-component') &&
     hasComponent(node.getAttribute('x-component'));
@@ -93,3 +169,36 @@ function findComponent(node) {
 
   return getComponent(uuid);
 }
+
+export function computeExpression(exp, context) {
+  let deps = computeDeps(context),
+      keys = Object.keys(deps),
+      values = keys.map((key) => deps[key]);
+
+  let fn = new Function(...keys, genExpFunction(exp));
+
+  return fn.apply(context, values);
+}
+
+function computeDeps(component) {
+  let deps = {};
+
+  while (component) {
+    if (component.as) {
+      deps[component.as] = component;
+    }
+
+    component = component.parent;
+  }
+
+  return deps;
+}
+
+function genExpFunction(exp = '') {
+  return 'return ' + exp + ';';
+}
+
+function noop() {
+  // do nothing
+}
+

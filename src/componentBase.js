@@ -1,4 +1,5 @@
 import {removeComponent} from './componentFactory';
+import {computeExpression} from './compile';
 
 let slice = Array.prototype.slice;
 
@@ -8,8 +9,11 @@ export default class Component {
     this.data = {};
     this.props = {};
     this.refs = {};
+    this.ref = '';
+    this.as = '';
     this.childs = [];
     this.parent = parent;
+    this.destroyQueue = this.initQueue = [];
     this.node = node;
 
     if (this.parent !== null) {
@@ -31,7 +35,8 @@ export default class Component {
         let name = camelize(attr.name);
 
         if (name === 'ref') {
-          this.parent.refs[attr.value] = this;
+          this.ref = attr.value;
+          this.parent.refs[this.ref] = this;
         }
 
         if (name === 'as') {
@@ -67,10 +72,15 @@ export default class Component {
   }
 
   deref(childComponent) {
-    let index = this.childs.indexOf(childComponent);
+    let index = this.childs.indexOf(childComponent),
+        ref = childComponent.ref;
 
     if (index > -1) {
       this.childs.splice(index, 1);
+    }
+
+    if (this.refs[ref]) {
+      delete this.refs[ref];
     }
   }
 
@@ -82,50 +92,28 @@ export default class Component {
       parent.deref(this);
     }
 
-    this.onDestroy();
+    this.refs = this.parent = this.node = this.props = this.data = null;
+
+    this.destroyQueue.forEach((fn) => {
+      fn();
+    });
+
+    this.destroyQueue.length = 0;
+
+    removeComponent(this.uuid);
 
     while (child = this.childs.pop()) {
       child.destroy();
     }
   }
 
-  onDestroy() {
-    this.refs = this.parent = this.node = null;
-
-    removeComponent(this.uuid);
+  onDestroy(fn) {
+    this.destroyQueue.push(fn);
   }
 
   onInit() {
     // do something
   }
-}
-
-function computeExpression(exp, context) {
-  let deps = computeDeps(context),
-      keys = Object.keys(deps),
-      values = keys.map((key) => deps[key]);
-
-  let fn = new Function(...keys, genExpFunction(exp));
-
-  return fn.apply(context, values);
-}
-
-function computeDeps(component) {
-  let deps = {};
-
-  while (component) {
-    if (component.as) {
-      deps[component.as] = component;
-    }
-
-    component = component.parent;
-  }
-
-  return deps;
-}
-
-function genExpFunction(exp = '') {
-  return 'return ' + exp + ';';
 }
 
 function camelize(str) {
