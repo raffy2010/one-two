@@ -1,6 +1,7 @@
 import {
   Component,
   parse,
+  compile,
   register
 } from '../../src/index';
 
@@ -118,25 +119,25 @@ class CountdownBase extends Component {
 class Countdown extends CountdownBase {
   getData() {
     return {
-      secondNode: null,
-      minuteNode: null
+      second: '',
+      minute: '',
+      color: '',
+      status: 1, // 1:running 0:stop
+      error: false,
+      logs: []
     };
   }
 
   init() {
-    this.data.secondNode = this.node.querySelector('.second_node');
-    this.data.minuteNode = this.node.querySelector('.minute_node');
-
     this.start();
   }
 
   updateSecond(second) {
     if (second < 10) {
       second = '0' + second;
-
     }
 
-    this.data.secondNode.innerHTML = second;
+    this.data.second = second;
   }
 
   updateMinute(minute) {
@@ -144,7 +145,54 @@ class Countdown extends CountdownBase {
       minute = '0' + minute;
     }
 
-    this.data.minuteNode.innerHTML = minute;
+    this.data.minute = minute;
+  }
+
+  toggleColor() {
+    this.data.error = !this.data.error;
+  }
+
+  start() {
+    super.start();
+
+    this.data.status = 1;
+  }
+
+  stop() {
+    super.stop();
+
+    this.data.status = 0;
+  }
+
+  toggleCountdown($event) {
+    $event.stopPropagation();
+
+    if (this.data.status === 1) {
+      this.stop();
+    } else {
+      this.start();
+    }
+  }
+
+  renderLog(logs) {
+    return logs.map(({
+      minute,
+      second
+    }, index) => `<li x-click="this.removeLog($event, ${index})">${minute}:${second}</li>`)
+    .join('');
+  }
+
+  createLog() {
+    let {minute, second} = this.data;
+
+    this.data.logs.push({
+      minute,
+      second
+    });
+  }
+
+  removeLog($event, $index) {
+    this.data.logs.splice($index, 1);
   }
 }
 
@@ -159,7 +207,7 @@ register('Countdown', Countdown);
  * parse the body node and bootstrap
  */
 document.addEventListener('DOMContentLoaded', () => {
-  parse(document.body);
+  compile(parse(document.body));
 });
 
 

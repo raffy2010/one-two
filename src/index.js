@@ -1,6 +1,4 @@
-import Component from './componentBase';
-
-export {Component};
+export * from './component';
 export * from './compile';
-export * from './componentFactory';
+export * from './factory';
 

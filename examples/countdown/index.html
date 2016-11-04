@@ -4,16 +4,32 @@
   <meta charset="UTF-8">
   <title>one-two countdown</title>
   <script src="./countdown.bundle.js"></script>
+  <style>
+    .red {
+      color: red;
+    }
+  </style>
 </head>
 <body>
-  <div>
-    countdown:
-    <span
-      x-component="Countdown"
-      total="900000"
-      class="countdown">
-      <span class="minute_node">15</span>:<span class="second_node">00</span>
-    </span>
+  <div
+    x-component="Countdown"
+    total="900000"
+    log-count="0"
+    x-class="red:this.data.error"
+    x-style="color:'#'+this.data.color"
+    class="countdown">
+      <button
+        x-click="this.toggleCountdown($event)"
+        x-html="this.data.status === 1 ? 'stop' : 'start'">stop</button>
+      <button
+        x-click="this.createLog()">log</button>
+      <p>countdown: <span x-html="this.data.minute">15</span>:<span x-html="this.data.second">00</span></p>
+      <p>color: #<input x-model="this.data.color" type="text" value="000000"></p>
+      <p>logs: <span x-html="this.data.logs.length">0</span></p>
+      <p x-show="!this.data.logs.length">no logs</p>
+      <ul
+        x-show="this.data.logs.length"
+        x-update="this.renderLog(this.data.logs)"></ul>
   </div>
 </body>
 </html>
