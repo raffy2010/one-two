@@ -22,7 +22,7 @@ var plugins,
 if (NODE_ENV === 'development') {
   plugins = [
     new webpack.DefinePlugin({
-      DEBUG: true
+      'process.env.NODE_ENV': JSON.stringify(NODE_ENV)
     })
   ];
 
@@ -35,7 +35,7 @@ if (NODE_ENV === 'development') {
 if (NODE_ENV === 'production') {
   plugins = [
     new webpack.DefinePlugin({
-      DEBUG: false
+      'process.env.NODE_ENV': JSON.stringify(NODE_ENV)
     }),
     new webpack.optimize.UglifyJsPlugin({
       mangle: true,

@@ -28,7 +28,9 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      DEBUG: true
+      'process.env': {
+        NODE_ENV: '"development"'
+      }
     })
   ]
 };

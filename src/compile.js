@@ -8,8 +8,10 @@ const keyReg = /this\.((?:props|data)\.[a-zA-Z]+)/g;
 
 export function parse(node, existNode) {
   if (Array.isArray(node)) {
-    return node.map(singleNode => parse(singleNode, existNode))
-      .filter(node => node);
+    return node.filter(node => node.nodeType === 1)
+      .map(singleNode => parse(singleNode, existNode))
+      .filter(node => node)
+      .reduce((prev, current) => prev.concat(current), []);
   }
 
   if (existNode) {
@@ -17,16 +19,31 @@ export function parse(node, existNode) {
     // we should bottom up to fetch parent node
 
     existNode = {
-      node: bottomUp(node, detectComponentNode),
+      node: bottomUp(node.parentNode, detectComponentNode),
       parent: null,
       attrs: [],
       childs: []
     };
-
-    return traverseDomNode(node, existNode);
+  } else {
+    existNode = {
+      node: null,
+      parent: null,
+      attrs: [],
+      childs: []
+    };
   }
 
-  return traverseDomNode(node);
+  let parseTree = traverseDomNode(node, existNode);
+
+  if (!parseTree.node && !parseTree.parent) {
+    return parseTree.childs.map(node => {
+      node.parent = null;
+
+      return node;
+    });
+  } else {
+    return parseTree;
+  }
 }
 
 export function compile(parseTree) {
@@ -100,7 +117,9 @@ function traverseDomNode(nodes, currentNode = null) {
   }
 
   if (!nodes.length) {
-    return currentNode;
+    return currentNode ?
+      rootNode(currentNode) :
+      currentNode;
   }
 
   let node = nodes.shift(),
@@ -135,7 +154,7 @@ function traverseDomNode(nodes, currentNode = null) {
       node
     }));
 
-  if (attrs.length) {
+  if (attrs.length && currentNode) {
     currentNode = hasComponent ?
       currentNode :
       commonParrentComponent(currentNode, node);
@@ -154,7 +173,17 @@ function traverseDomNode(nodes, currentNode = null) {
 
 function commonParrentComponent(currentNode, domNode) {
   do {
-    if (currentNode.node.contains(domNode)) {
+    if ((!currentNode.node && !currentNode.parent) ||
+      currentNode.node.contains(domNode)) {
+
+      return currentNode;
+    }
+  } while (currentNode = currentNode.parent);
+}
+
+function rootNode(currentNode) {
+  do {
+    if (!currentNode.parent) {
       return currentNode;
     }
   } while (currentNode = currentNode.parent);
@@ -644,7 +673,39 @@ function invokeArrayMethod(method, fn, ...args) {
 export function computeExpression(exp, context, keys = []) {
   let fn = new Function(...keys, genExpFunction(exp));
 
-  return (...values) => fn.apply(context, values);
+  return (...values) => {
+    let ret;
+
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        ret = fn.apply(context, values);
+      } catch (e) {
+        console.log(
+          `fail to compute expression %c${exp}` +
+            '%c, context component ' +
+            `%c${context.label}`,
+            'color: red;',
+            'color: black;',
+            'color: blue;'
+        );
+
+        let args = keys.reduce((prev, current, index) => {
+          prev[current] = keys[index];
+
+          return prev;
+        }, {});
+
+        console.log('component instance', context);
+        console.log('args', args);
+
+        throw e;
+      }
+    } else {
+      ret = fn.apply(context, values);
+    }
+
+    return ret;
+  };
 }
 
 export function computeExpressionWithDeps(exp, context, deps = {}) {

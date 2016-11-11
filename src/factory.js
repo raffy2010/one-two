@@ -13,13 +13,17 @@ export function register(label, Ctor) {
     Ctor: Ctor,
     instances: []
   };
+
+  return () => {
+    delete ComponentMap[label];
+  };
 }
 
 export function getInstance(label, node, parent) {
   let component = ComponentMap[label];
 
   if (!component) {
-    throw new Error('try to initialize an unregister component');
+    throw new Error('try to initialize an unregister component: ' + label);
   }
 
   let instance = new component.Ctor(node, parent);

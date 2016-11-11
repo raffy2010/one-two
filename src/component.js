@@ -128,14 +128,15 @@ export class Component {
   }
 
   deref(childComponent) {
-    let index = this.childs.indexOf(childComponent),
+    let index,
         ref = childComponent.ref;
 
-    if (index > -1) {
+    if (this.childs.length &&
+      (index = this.childs.indexOf(childComponent)) > -1) {
       this.childs.splice(index, 1);
     }
 
-    if (this.refs[ref]) {
+    if (this.refs && this.refs[ref]) {
       delete this.refs[ref];
     }
   }
