@@ -273,6 +273,71 @@ test('x-class should update dom class automatically', () => {
   fooComponent.data.error = true;
 
   expect(node.classList.contains('red')).toBe(true);
+
+  fooComponent.data.error = false;
+
+  expect(node.classList.contains('red')).toBe(false);
+});
+
+test('x-style should update dom style automatically', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        fontWeight: ''
+      };
+    }
+  }
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo" x-style="fontWeight:this.data.fontWeight"></div>
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
+
+  expect(node.style.fontWeight).toBe('');
+
+  compile(tree);
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  fooComponent.data.fontWeight = 'bold';
+
+  expect(node.style.fontWeight).toBe('bold');
+
+  fooComponent.data.fontWeight = null;
+
+  expect(node.style.fontWeight).toBe('');
+});
+
+test('x-event should bind dom event automatically', () => {
+  class Foo extends Component {
+  }
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo" x-click="this.doSomething();"></div>
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
+
+  let fooMock = jest.fn();
+
+  compile(tree);
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  fooComponent.doSomething = fooMock;
+
+  expect(fooMock).toHaveBeenCalledTimes(0);
+
+  node.click();
+
+  expect(fooMock).toHaveBeenCalledTimes(1);
 });
 
 test('reparse is also allow after compile', () => {
@@ -445,7 +510,8 @@ test('x-model should bind the input value to the specified prop/data', () => {
 
   fooUnregister = register('Foo', Foo);
 
-  let tree = parse(document.body), node = document.body.querySelector('#foo');
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
 
   compile(tree);
 
@@ -454,12 +520,7 @@ test('x-model should bind the input value to the specified prop/data', () => {
   fooComponent.data.greet = 'onetwo';
 
   expect(node.value).toBe('onetwo');
-
-  node.value = 'another-onetwo';
-
-  expect(fooComponent.data.greet).toBe('onetwo');
 });
-
 
 test('x-model should support checkbox', () => {
   class Foo extends Component {
