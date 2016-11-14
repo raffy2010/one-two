@@ -360,3 +360,179 @@ test('x-update should update the content to target dom', () => {
   expect(document.querySelectorAll('.more-text')[0].id).toBe('moretext2');
 });
 
+
+test('x-append should append the content to target dom', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        moreText: ''
+      };
+    }
+  }
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo" x-append="this.data.moreText"></div>
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
+
+  compile(tree);
+
+  expect(document.querySelector('.more-text')).toBeNull();
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  fooComponent.data.moreText = '<div id="moretext1" class="more-text"></div>';
+
+  expect(document.querySelectorAll('.more-text').length).toBe(1);
+  expect(document.querySelectorAll('.more-text')[0].id).toBe('moretext1');
+
+  fooComponent.data.moreText = '<div id="moretext2" class="more-text"></div>';
+
+  expect(document.querySelectorAll('.more-text').length).toBe(2);
+  expect(document.querySelectorAll('.more-text')[1].id).toBe('moretext2');
+});
+
+test('x-show should display or hide the target dom according to the expression value', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        isOk: true
+      };
+    }
+  }
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo" x-show="this.data.isOk"></div>
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
+
+  compile(tree);
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  expect(node.style.display).toBe('');
+
+  fooComponent.data.isOk = false;
+
+  expect(node.style.display).toBe('none');
+
+  fooComponent.data.isOk = true;
+
+  expect(node.style.display).toBe('');
+});
+
+
+test('x-model should bind the input value to the specified prop/data', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        greet: ''
+      };
+    }
+  }
+
+  document.body.innerHTML = `
+    <input id="foo" x-component="Foo" x-model="this.data.greet" type="text" />
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body), node = document.body.querySelector('#foo');
+
+  compile(tree);
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  fooComponent.data.greet = 'onetwo';
+
+  expect(node.value).toBe('onetwo');
+
+  node.value = 'another-onetwo';
+
+  expect(fooComponent.data.greet).toBe('onetwo');
+});
+
+
+test('x-model should support checkbox', () => {
+  class Foo extends Component {
+    getData() { return {
+        supportCheckbox: false
+      };
+    }
+  }
+
+  document.body.innerHTML = `
+    <input id="foo" x-component="Foo" x-model="this.data.supportCheckbox" type="checkbox" />
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body),
+      fooNode = document.body.querySelector('#foo');
+
+  compile(tree);
+
+  fooComponent = getComponent(fooNode.getAttribute('x-component-id'));
+
+  fooComponent.data.supportCheckbox = true;
+
+  expect(fooNode.checked).toBe(true);
+
+  fooNode.click();
+
+  expect(fooComponent.data.supportCheckbox).toBe(false);
+});
+
+test('x-model should support radio', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        size: ''
+      };
+    }
+  }
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo">
+      <input id="big" x-model="this.data.size" type="radio" value="big" />
+      <input id="medium" x-model="this.data.size" type="radio" value="medium" />
+      <input id="small" x-model="this.data.size" type="radio" value="small" />
+    </div>
+  `;
+
+  fooUnregister = register('Foo', Foo);
+
+  let tree = parse(document.body),
+      fooNode = document.body.querySelector('#foo'),
+      bigRadio = document.body.querySelector('#big'),
+      mediumRadio = document.body.querySelector('#medium'),
+      smallRadio = document.body.querySelector('#small');
+
+  compile(tree);
+
+  fooComponent = getComponent(fooNode.getAttribute('x-component-id'));
+
+  fooComponent.data.size = 'medium';
+
+  expect(mediumRadio.checked).toBe(true);
+  expect(bigRadio.checked).toBe(false);
+  expect(smallRadio.checked).toBe(false);
+
+  bigRadio.click();
+
+  setTimeout(() => {
+    expect(fooComponent.data.size).toBe('big');
+    expect(bigRadio.checked).toBe(true);
+    expect(mediumRadio.checked).toBe(false);
+    expect(smallRadio.checked).toBe(false);
+  }, 0);
+});
+

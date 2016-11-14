@@ -85,6 +85,47 @@ test('dom prop string value should be quotes surrounded', () => {
   expect(fooComponent.props.name).toBe('foo');
 });
 
+test('override getProps and getData methods will override props/data map instead extending it', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        status: 'ok'
+      };
+    }
+    getProps() {
+      return {
+        name: ''
+      };
+    }
+  }
+
+  fooUnregister = register('Foo', Foo);
+
+  barUnregister = register('Bar', class Bar extends Foo {
+    getData() {
+      return {};
+    }
+
+    getProps() {
+      return {};
+    }
+  });
+
+  document.body.innerHTML = `
+    <div id="bar" x-component="Bar" name="'foo'"></div>
+  `;
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#bar');
+
+  compile(tree);
+
+  barComponent = getComponent(node.getAttribute('x-component-id'));
+
+  expect(barComponent.props.name).toBeUndefined();
+  expect(barComponent.data.status).toBeUndefined();
+});
+
 test('setting ref attr will set reference to parent refs property', () => {
   class Foo extends Component {}
   class Bar extends Component {}
@@ -241,12 +282,12 @@ test('dom property can not affect component data', () => {
   expect(fooComponent.data.status).toBe(0);
 });
 
-
 test('different component data/props assignment will trigger watcher invoke', () => {
   fooUnregister = register('Foo', class Foo extends Component {
     getData() {
       return {
-        status: 0 };
+        status: 0
+      };
     }
   });
 

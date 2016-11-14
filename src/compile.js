@@ -393,14 +393,11 @@ registerAttr('x-model', (node, value, component) => {
       ['newValue']
     );
 
-    let isRadioOrCheckbox;
-
-    if (/(radio|checkbox)/i.test(node.type)) {
-      isRadioOrCheckbox = true;
-    }
+    let isCheckbox = /checkbox/i.test(node.type);
+    let isRadio = /radio/i.test(node.type);
 
     let bindFn = () => {
-      let newValue = isRadioOrCheckbox ?
+      let newValue = isCheckbox ?
         node.checked :
         node.value;
 
@@ -416,9 +413,11 @@ registerAttr('x-model', (node, value, component) => {
     let unbindWatch = component.addWatcher(
       watchKey[0],
       commonObserverMaker(
-        isRadioOrCheckbox ?
-          updateCheckboxOrRadio :
-          updateInputValue,
+        isCheckbox ?
+          updateCheckbox :
+          isRadio ?
+            updateRadio :
+            updateInputValue,
         component,
         node,
         value
@@ -538,8 +537,12 @@ function updateInputValue(node, value = '') {
   node.value = value;
 }
 
-function updateCheckboxOrRadio(node, checked) {
+function updateCheckbox(node, checked) {
   node.checked = checked ? true : false;
+}
+
+function updateRadio(node, value) {
+  node.checked = value === node.value;
 }
 
 function appendDom(node, value = '') {
