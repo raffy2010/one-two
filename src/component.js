@@ -69,7 +69,11 @@ export class Component {
         decorateArrayMethod(value, newValue => {
           value = newValue;
 
-          this.invokeWatcher(prefix + '.' + name, value, false);
+          this.invokeWatcher(
+            `${prefix}.${name}`,
+            value,
+            false
+          );
         });
       }
 
@@ -80,7 +84,11 @@ export class Component {
 
           value = newValue;
 
-          this.invokeWatcher(prefix + '.' + name, value, isEqual);
+          this.invokeWatcher(
+            `${prefix}.${name}`,
+            value,
+            isEqual
+          );
         },
         configurable: true
       });
@@ -97,6 +105,41 @@ export class Component {
 
   getData() {
     return {};
+  }
+
+  setIn(key, value) {
+    let keys = key.split('.');
+
+    if (keys.length < 2) {
+      throw new Error('invalid param');
+    }
+
+    let target = keys[0],
+        name = keys[1],
+        path = keys.slice(2),
+        originPropsKeys = Object.keys(this.getProps()),
+        originDataKeys = Object.keys(this.getData());
+
+    if (!((target === 'props' && originPropsKeys.includes(name)) ||
+      (target === 'data' && originDataKeys.includes(name)))) {
+      throw new Error('invalid param');
+    }
+
+    path.reduce((prev, cur, index) => {
+      if (index === path.length - 1) {
+        prev[cur] = typeof value === 'function' ?
+          value(prev[cur]) :
+          value;
+      } else {
+        return prev[cur];
+      }
+    }, this[target][name]);
+
+    this.invokeWatcher(
+      `${target}.${name}`,
+      this[target][name],
+      false
+    );
   }
 
   invokeWatcher(targetKey, value, isEqual) {

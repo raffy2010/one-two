@@ -126,6 +126,68 @@ test('override getProps and getData methods will override props/data map instead
   expect(barComponent.data.status).toBeUndefined();
 });
 
+test('setIn method should work', () => {
+  class Foo extends Component {
+    getData() {
+      return {
+        status: {
+          detail: {
+            real: 'foo'
+          }
+        }
+      };
+    }
+    getProps() {
+      return {
+        bar: {}
+      };
+    }
+  }
+
+  fooUnregister = register('Foo', Foo);
+
+  let json = JSON.stringify({
+    list: [{
+      id: 123,
+      name: 'bar123'
+    }, {
+      id: 456,
+      name: 'bar456'
+    }]
+  });
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo" bar='${json}'></div>
+  `;
+
+  let dataMock = jest.fn(),
+      propsMock = jest.fn();
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
+
+  compile(tree);
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  fooComponent.addWatcher('props.bar', propsMock);
+  fooComponent.addWatcher('data.status', dataMock);
+
+  fooComponent.setIn('props.bar.list', list => list.filter(
+    item => item.name === 'bar123'
+  ));
+
+  expect(propsMock).toHaveBeenCalledTimes(1);
+  expect(fooComponent.props.bar.list.length).toBe(1);
+  expect(fooComponent.props.bar.list[0].id).toBe(123);
+  expect(propsMock).toHaveBeenCalledTimes(1);
+
+  fooComponent.setIn('data.status.detail.real', 'bar');
+
+  expect(fooComponent.data.status.detail.real).toBe('bar');
+  expect(dataMock).toHaveBeenCalledTimes(1);
+});
+
 test('setting ref attr will set reference to parent refs property', () => {
   class Foo extends Component {}
   class Bar extends Component {}
