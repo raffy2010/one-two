@@ -69,7 +69,7 @@ export class Component {
         decorateArrayMethod(value, newValue => {
           value = newValue;
 
-          this.invokeWatcher(prefix + '.' + name, value);
+          this.invokeWatcher(prefix + '.' + name, value, false);
         });
       }
 
@@ -78,11 +78,9 @@ export class Component {
         set: newValue => {
           let isEqual = equal(newValue, value);
 
-          if (!isEqual) {
-            value = newValue;
+          value = newValue;
 
-            this.invokeWatcher(prefix + '.' + name, value);
-          }
+          this.invokeWatcher(prefix + '.' + name, value, isEqual);
         },
         configurable: true
       });
@@ -101,19 +99,21 @@ export class Component {
     return {};
   }
 
-  invokeWatcher(targetKey, value) {
-    this.watchers.forEach(({key, fn}) => {
-      if (targetKey === key) {
+  invokeWatcher(targetKey, value, isEqual) {
+    this.watchers.forEach(({key, fn, force}) => {
+      if (targetKey === key &&
+        (!isEqual || force)) {
         fn(value);
       }
     });
   }
 
-  addWatcher(key, fn) {
+  addWatcher(key, fn, force = false) {
     let watcherObj = {
       key,
       fn,
-      id: ++this.watcherCount
+      id: ++this.watcherCount,
+      force
     };
 
     this.watchers.push(watcherObj);

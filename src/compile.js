@@ -443,7 +443,8 @@ registerAttr('x-append', (node, value, component) => {
         component,
         node,
         value
-      )
+      ),
+      true
     );
 
     storeWatcher(node, unbindWatch);

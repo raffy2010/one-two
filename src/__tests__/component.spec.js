@@ -263,17 +263,52 @@ test('different component data/props assignment will trigger watcher invoke', ()
 
   let mockFn = jest.fn();
 
-  fooComponent.invokeWatcher = mockFn;
+  fooComponent.addWatcher('data.status', mockFn);
 
   fooComponent.data.status = 0;
 
-  expect(mockFn.mock.calls.length).toBe(0);
+  expect(mockFn).toHaveBeenCalledTimes(0);
 
   fooComponent.data.status = 1;
 
-  expect(mockFn.mock.calls.length).toBe(1);
-  expect(mockFn.mock.calls[0][0]).toBe('data.status');
-  expect(mockFn.mock.calls[0][1]).toBe(1);
+  expect(mockFn).toHaveBeenCalledTimes(1);
+});
+
+test('same value data/props assignment can also trigger watcher invoke', () => {
+  fooUnregister = register('Foo', class Foo extends Component {
+    getData() {
+      return {
+        status: 0
+      };
+    }
+  });
+
+  document.body.innerHTML = `
+    <div id="foo" x-component="Foo"></div>
+  `;
+
+  let tree = parse(document.body),
+      node = document.body.querySelector('#foo');
+
+  compile(tree);
+
+  fooComponent = getComponent(node.getAttribute('x-component-id'));
+
+  let mockFn = jest.fn();
+
+  let unbindWatcher = fooComponent.addWatcher('data.status', mockFn);
+
+  fooComponent.data.status = 0;
+
+  expect(mockFn).toHaveBeenCalledTimes(0);
+
+  unbindWatcher();
+
+  unbindWatcher = fooComponent.addWatcher('data.status', mockFn, true);
+
+  fooComponent.data.status = 0;
+
+  expect(mockFn).toHaveBeenCalledTimes(1);
 });
 
 test('component parent and childs property should work', () => {
