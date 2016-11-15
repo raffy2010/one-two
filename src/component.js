@@ -63,10 +63,11 @@ export class Component {
 
   prepareWatch(prefix, target) {
     Object.keys(target).forEach((name) => {
-      let value = target[name];
+      let value = target[name],
+          arrayDecorater;
 
       if (Array.isArray(value)) {
-        decorateArrayMethod(value, newValue => {
+        arrayDecorater = decorateArrayMethod.bind(null, newValue => {
           value = newValue;
 
           this.invokeWatcher(
@@ -75,6 +76,8 @@ export class Component {
             false
           );
         });
+
+        arrayDecorater(value);
       }
 
       Object.defineProperty(target, name, {
@@ -83,6 +86,10 @@ export class Component {
           let isEqual = equal(newValue, value);
 
           value = newValue;
+
+          if (Array.isArray(value)) {
+            arrayDecorater(value);
+          }
 
           this.invokeWatcher(
             `${prefix}.${name}`,

@@ -662,7 +662,7 @@ const arrMethods = [
   'reverse'
 ];
 
-export function decorateArrayMethod(arr, fn) {
+export function decorateArrayMethod(fn, arr) {
   arrMethods.forEach(method => {
     arr[method] = invokeArrayMethod.bind(arr, method, fn);
   });
