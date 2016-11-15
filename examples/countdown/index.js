@@ -98,7 +98,6 @@ class CountdownBase extends Component {
     // do something
     //
   }
-
   updateMinute() {
     // do something
     //
@@ -118,14 +117,13 @@ class CountdownBase extends Component {
 
 class Countdown extends CountdownBase {
   getData() {
-    return {
+    return Object.assign(super.getData(), {
       second: '',
       minute: '',
       color: '',
       status: 1, // 1:running 0:stop
-      error: false,
       logs: []
-    };
+    });
   }
 
   init() {
@@ -146,10 +144,6 @@ class Countdown extends CountdownBase {
     }
 
     this.data.minute = minute;
-  }
-
-  toggleColor() {
-    this.data.error = !this.data.error;
   }
 
   start() {
@@ -178,8 +172,28 @@ class Countdown extends CountdownBase {
     return logs.map(({
       minute,
       second
-    }, index) => `<li x-click="this.removeLog($event, ${index})">${minute}:${second}</li>`)
+    }) =>
+      `<li x-component="TimeRecord"
+        minute="${minute}"
+        second="${second}"
+        x-class="selected:this.data.selected"
+        x-click="this.data.selected = !this.data.selected"
+        class="time-record">
+        ${minute}:${second}
+      </li>`
+    )
     .join('');
+  }
+
+  removeSelectedLog() {
+    let logs = this.childs
+      .filter(child => !child.data.selected)
+      .map(child => ({
+        minute: child.props.minute,
+        second: child.props.second
+      }));
+
+    this.data.logs = logs;
   }
 
   createLog() {
@@ -190,18 +204,30 @@ class Countdown extends CountdownBase {
       second
     });
   }
-
-  removeLog($event, $index) {
-    this.data.logs.splice($index, 1);
-  }
 }
 
+
+class TimeRecord extends Component {
+  getData() {
+    return {
+      selected: false
+    };
+  }
+
+  getProps() {
+    return {
+      minute: 0,
+      second: 0
+    };
+  }
+}
 
 /*
  * register components with the unique name
  * then you can use in your html
  */
 register('Countdown', Countdown);
+register('TimeRecord', TimeRecord);
 
 /*
  * parse the body node and bootstrap
