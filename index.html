@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>One-two by raffy2010</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">One-two</h1>
+      <h2 class="project-tagline">A simple web micro framework</h2>
+      <a href="https://github.com/raffy2010/one-two" class="btn">View on GitHub</a>
+      <a href="https://github.com/raffy2010/one-two/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/raffy2010/one-two/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="one-two" class="anchor" href="#one-two" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>one-two</h1>
+
+<p>A simple web micro framework</p>
+
+<p>It's small(4kb min+gzip) but powerful. It help you write much more declarative code,
+through Component system you can make your code much reusable without pain.
+You can use it with any tech stack, no Node.js environment needed, no server render
+needed, just ship with your html content, parse and compile.</p>
+
+<p>However, it isn't a full-feature MVVM framework. there's no render feature in it,
+you should handle that by yourself no matter server render or client template.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<div class="highlight highlight-source-shell"><pre>$ npm install one-two --save</pre></div>
+
+<h2>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example</h2>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">html</span>&gt;
+  &lt;<span class="pl-ent">head</span>&gt;
+    &lt;<span class="pl-ent">title</span>&gt;Onetwo Greet Example&lt;/<span class="pl-ent">title</span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>greet.bundle.js<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+  &lt;/<span class="pl-ent">head</span>&gt;
+  &lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">x-component</span>=<span class="pl-s"><span class="pl-pds">"</span>Greet<span class="pl-pds">"</span></span>&gt;
+      word: &lt;<span class="pl-ent">input</span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span> <span class="pl-e">x-model</span>=<span class="pl-s"><span class="pl-pds">"</span>this.props.word<span class="pl-pds">"</span></span>&gt;
+      &lt;<span class="pl-ent">p</span>&gt;hello, &lt;<span class="pl-ent">span</span> <span class="pl-e">x-html</span>=<span class="pl-s"><span class="pl-pds">"</span>this.props.word<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">span</span>&gt;&lt;/<span class="pl-ent">p</span>&gt;
+    &lt;/<span class="pl-ent">div</span>&gt;
+  &lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre></div>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> {
+  <span class="pl-smi">compile</span>,
+  <span class="pl-smi">parse</span>,
+  <span class="pl-smi">Component</span>,
+  <span class="pl-smi">register</span>
+} <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>one-two<span class="pl-pds">'</span></span>;
+
+<span class="pl-k">class</span> <span class="pl-en">Greet</span> <span class="pl-k">extends</span> <span class="pl-e">Component</span> {
+  <span class="pl-en">getProps</span>() {
+    <span class="pl-k">return</span> {
+      word<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    };
+  }
+}
+
+<span class="pl-en">register</span>(<span class="pl-s"><span class="pl-pds">'</span>Greet<span class="pl-pds">'</span></span>, Greet);
+
+<span class="pl-c1">document</span>.<span class="pl-c1">addEventListener</span>(<span class="pl-s"><span class="pl-pds">'</span>DOMContentLoaded<span class="pl-pds">'</span></span>, () <span class="pl-k">=&gt;</span> {
+  <span class="pl-en">compile</span>(<span class="pl-en">parse</span>(<span class="pl-c1">document</span>.<span class="pl-c1">body</span>));
+});</pre></div>
+
+<h2>
+<a id="attrs" class="anchor" href="#attrs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Attrs</h2>
+
+<p>there are nine builtin attrs to help you to build app. Almost include all features
+you need, Component, DOM Event, interpolation, DOM tree update, DOM style and class update.</p>
+
+<h3>
+<a id="x-component" class="anchor" href="#x-component" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-component</h3>
+
+<p>declare a component, the component should be register first via register(string, class) method
+the dom node will be the root node of component, this.node will point to it.</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-component</span>=<span class="pl-s"><span class="pl-pds">"</span>Foo<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-html" class="anchor" href="#x-html" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-html</h3>
+
+<p>insert expression value into dom node, not support interpolation flag(like {{}}) now</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-html</span>=<span class="pl-s"><span class="pl-pds">"</span>this.data.text<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-model" class="anchor" href="#x-model" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-model</h3>
+
+<p>link input value to component property, it's bidirection link</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">input</span> <span class="pl-e">x-model</span>=<span class="pl-s"><span class="pl-pds">"</span>this.data.name<span class="pl-pds">"</span></span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span> /&gt;</pre></div>
+
+<h3>
+<a id="x-update" class="anchor" href="#x-update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-update</h3>
+
+<p>the attr replace the dom child nodes with the content generated by the expression,
+after replacement it will parse the new section and compile if attr was found.</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-update</span>=<span class="pl-s"><span class="pl-pds">"</span>this.renderLogs(this.data.logs)<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-append" class="anchor" href="#x-append" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-append</h3>
+
+<p>x-append is like x-update, the only difference is the dom operation, x-append append
+content to that node, whereas x-update replace it</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-append</span>=<span class="pl-s"><span class="pl-pds">"</span>this.data.moreText<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-event" class="anchor" href="#x-event" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-event</h3>
+
+<p>x-event can help you bind dom event handler, $event is the origin dom event inject to
+the expression scope</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-click</span>=<span class="pl-s"><span class="pl-pds">"</span>this.clickIt($event)<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-class" class="anchor" href="#x-class" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-class</h3>
+
+<p>x-class help you manipulate dom class, format className:expression[;className:expression]</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-class</span>=<span class="pl-s"><span class="pl-pds">"</span>foo:this.data.isFoo<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-style" class="anchor" href="#x-style" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-style</h3>
+
+<p>x-class help you manipulate dom style, format style:expression[;style:expression]</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-style</span>=<span class="pl-s"><span class="pl-pds">"</span>fontSize:this.data.fontSize<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h3>
+<a id="x-show" class="anchor" href="#x-show" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>x-show</h3>
+
+<p>x-show help you display dom node conditionally</p>
+
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">x-show</span>=<span class="pl-s"><span class="pl-pds">"</span>this.data.isOk<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p><a href="https://tldrlegal.com/license/mit-license">MIT</a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/raffy2010/one-two">One-two</a> is maintained by <a href="https://github.com/raffy2010">raffy2010</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
